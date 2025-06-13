@@ -1,5 +1,8 @@
 streamlit
-torch
-transformers
-torchaudio
-scipy
+librosa
+numpy
+pandas
+scikit-learn
+imbalanced-learn
+matplotlib
+tqdm
