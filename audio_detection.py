@@ -7,12 +7,12 @@ Original file is located at
     https://colab.research.google.com/drive/1h84lQrVnK7_Pb5LZBOK7dIzYgHxRVR7s
 """
 
-!wget -O Audio_Song_Actors_01-24.zip "https://zenodo.org/records/1188976/files/Audio_Song_Actors_01-24.zip?download=1"
-!unzip Audio_Song_Actors_01-24.zip -d Audio_Song_Actors
-!wget -O Audio_Speech_Actors_01-24.zip "https://zenodo.org/records/1188976/files/Audio_Speech_Actors_01-24.zip?download=1"
-!unzip Audio_Speech_Actors_01-24.zip -d Audio_Speech_Actors
+# !wget -O Audio_Song_Actors_01-24.zip "https://zenodo.org/records/1188976/files/Audio_Song_Actors_01-24.zip?download=1"
+# !unzip Audio_Song_Actors_01-24.zip -d Audio_Song_Actors
+# !wget -O Audio_Speech_Actors_01-24.zip "https://zenodo.org/records/1188976/files/Audio_Speech_Actors_01-24.zip?download=1"
+# !unzip Audio_Speech_Actors_01-24.zip -d Audio_Speech_Actors
 
-!pip install transformers datasets torchaudio evaluate -q
+# !pip install transformers datasets torchaudio evaluate -q
 
 import os
 
