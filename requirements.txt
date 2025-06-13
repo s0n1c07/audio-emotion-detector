@@ -1,8 +1,5 @@
 streamlit
 librosa
 numpy
-pandas
 scikit-learn
-imbalanced-learn
-matplotlib
-tqdm
+joblib
