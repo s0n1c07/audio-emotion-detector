@@ -42,12 +42,15 @@ if uploaded_file is not None:
         waveform = torchaudio.transforms.Resample(orig_freq=sr, new_freq=16000)(waveform.unsqueeze(0)).squeeze(0)
 
     # Extract features and run inference
-    inputs = extractor(waveform, sampling_rate=16000, return_tensors="pt", padding=True)
-    inputs = {k: v.to(model.device) for k, v in inputs.items()}
+    with st.spinner("🔍 Analyzing emotion..."):
+    # Extract features and run inference
+        inputs = extractor(waveform, sampling_rate=16000, return_tensors="pt", padding=True)
+        inputs = {k: v.to(model.device) for k, v in inputs.items()}
 
-    with torch.no_grad():
-        logits = model(**inputs).logits
-        pred = torch.argmax(logits, dim=-1).item()
-        predicted_emotion = id2label[pred]
+        with torch.no_grad():
+            logits = model(**inputs).logits
+            pred = torch.argmax(logits, dim=-1).item()
+            predicted_emotion = id2label[pred]
 
     st.success(f"🎯 **Predicted Emotion:** {predicted_emotion}")
+
