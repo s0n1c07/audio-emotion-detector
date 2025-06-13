@@ -1,10 +1,11 @@
 import streamlit as st
 import torch
-import torchaudio
 import io
+from scipy.io import wavfile
+import numpy as np
 from transformers import AutoFeatureExtractor, AutoModelForAudioClassification
 
-# Load model and feature extractor
+# Load model
 @st.cache_resource
 def load_model():
     extractor = AutoFeatureExtractor.from_pretrained("Hatman/audio-emotion-detection")
@@ -15,32 +16,38 @@ def load_model():
 extractor, model, id2label = load_model()
 
 st.title("🎙️ Audio Emotion Detection")
-st.write("Upload a `.wav` file and get the predicted emotion.")
+st.write("Upload a `.wav` file to classify the emotion.")
 
-uploaded_file = st.file_uploader("Choose an audio file", type=["wav"])
+uploaded_file = st.file_uploader("Upload a .wav file", type=["wav"])
 
 if uploaded_file is not None:
-    # Play the audio
     st.audio(uploaded_file)
 
-    # Load audio from memory (not file path)
-    audio_bytes = uploaded_file.read()
-    waveform, sr = torchaudio.load(io.BytesIO(audio_bytes))
+    # Read audio from memory using scipy
+    sr, waveform_np = wavfile.read(io.BytesIO(uploaded_file.read()))
 
-    # Resample if not 16kHz
+    # Normalize and convert to torch tensor
+    if waveform_np.dtype != np.float32:
+        waveform_np = waveform_np.astype(np.float32) / np.iinfo(waveform_np.dtype).max
+
+    waveform = torch.tensor(waveform_np)
+
+    # Convert to mono if stereo
+    if len(waveform.shape) > 1:
+        waveform = waveform.mean(dim=-1)
+
+    # Resample to 16000 if needed
     if sr != 16000:
-        waveform = torchaudio.transforms.Resample(orig_freq=sr, new_freq=16000)(waveform)
-    waveform = waveform.squeeze()
+        import torchaudio
+        waveform = torchaudio.transforms.Resample(orig_freq=sr, new_freq=16000)(waveform.unsqueeze(0)).squeeze(0)
 
-    # Feature extraction
+    # Extract features and run inference
     inputs = extractor(waveform, sampling_rate=16000, return_tensors="pt", padding=True)
     inputs = {k: v.to(model.device) for k, v in inputs.items()}
 
-    # Inference
     with torch.no_grad():
         logits = model(**inputs).logits
         pred = torch.argmax(logits, dim=-1).item()
-        predicted_label = id2label[pred]
+        predicted_emotion = id2label[pred]
 
-    # Show result
-    st.success(f"**Predicted Emotion:** {predicted_label}")
+    st.success(f"🎯 **Predicted Emotion:** {predicted_emotion}")
