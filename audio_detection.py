@@ -45,7 +45,11 @@ def load_model():
 # ----------- Streamlit UI -----------
 st.set_page_config(page_title="Emotion Detector", layout="centered")
 st.title("🎧 Audio Emotion Detection")
-st.write("Upload a `.wav` file and this app will classify the emotion expressed in it.")
+st.markdown("""
+Upload your `.wav` file below and our emotion detection system will analyze it.  
+This model detects **8 emotions**: 😐 Neutral, 😌 Calm, 😊 Happy, 😢 Sad, 😠 Angry, 😨 Fearful, 🤢 Disgust, 😲 Surprised.
+""")
+# st.write("Upload a `.wav` file and this app will classify the emotion expressed in it.")
 
 uploaded_file = st.file_uploader("Choose an audio file (.wav only)", type=["wav"])
 
@@ -68,7 +72,8 @@ if uploaded_file is not None:
         proba = model.predict_proba(features_scaled)[0]
 
         # Output
-        st.success(f"**Predicted Emotion:** {predicted_emotion}")
+        st.markdown(f"### 🎭 Emotion Detected: `{predicted_emotion}`")
         st.bar_chart(data=dict(zip(encoder.classes_, proba)))
+
     except Exception as e:
         st.error(f"⚠️ Error: {e}")
