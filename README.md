@@ -1,76 +1,119 @@
-# 🎧 Audio Emotion Classification
+# Audio Emotion Classification
 
-This repository contains:
+Machine learning pipeline for classifying emotions in speech audio with a Streamlit web interface.
 
-- A machine learning pipeline for classifying emotions in speech audio using Python, `librosa`, and `scikit-learn`.
-- A **Streamlit web app** that accepts a `.wav` file and predicts the emotion expressed in it.
+## 🔗 Live Demo
+**[Try the app here](https://audio-emotion-detector-tcvwfxrwvjlp9fcfe97iwz.streamlit.app/)**
 
----
+## Features
+- Real-time emotion detection from `.wav` files
+- 8 emotion categories: neutral, calm, happy, sad, angry, fearful, disgust, surprised
+- Interactive web interface with probability visualization
+- Feature extraction using MFCC, spectral contrast, chroma, and tonnetz
 
-## 📁 Files in the Repository
+## Quick Start
 
-- `audio_classification.ipynb` – Notebook for data preprocessing, feature extraction, augmentation, model training & evaluation.
-- `audio_detection.py` – The Streamlit application for live audio emotion prediction.
-- `model.pkl`, `scaler.pkl`, `encoder.pkl` – Serialized model and preprocessing tools.
-- `requirements.txt` – List of dependencies to run this project.
+### Prerequisites
+- Python 3.8+
+- pip
 
----
-
-## 🚀 Streamlit App
-
-The Streamlit app lets you:
-
-- Upload a `.wav` file
-- Automatically extract features and classify the emotion
-- View the emotion prediction and probability distribution via bar chart
-
-### 🔧 Run the App Locally
-
-Make sure you have Python 3.8+ installed. Then:
-
+### Installation
 ```bash
+git clone <repository-url>
+cd audio-emotion-classification
 pip install -r requirements.txt
-streamlit run app.py
 ```
-## 📊 Model Training Overview (audio_classification.ipynb)
-Workflow Summary:
 
-- Data Loading – Reads .wav files from folders like Audio_Speech_Actors and Audio_Song_Actors.
+### Run Locally
+```bash
+streamlit run audio_detection.py
+```
 
-- Feature Extraction – Extracts MFCCs, delta features, spectral contrast, chroma, and tonnetz features using librosa.
+## Project Structure
+```
+├── audio_detection.py          # Streamlit web app
+├── audio_classification.ipynb  # Model training notebook
+├── model.pkl                   # Trained ExtraTreesClassifier
+├── scaler.pkl                  # Feature scaler
+├── encoder.pkl                 # Label encoder
+└── requirements.txt            # Dependencies
+```
 
-- Data Augmentation – Adds background noise to selected emotions (happy, sad) to increase dataset variability.
+## Model Pipeline
 
-- Model Training – Uses ExtraTreesClassifier along with SMOTE to balance classes.
+### 1. Feature Extraction
+- **MFCC**: 40 coefficients + mean/std
+- **Delta features**: First and second derivatives
+- **Spectral contrast**: Frequency band energy differences
+- **Chroma**: Pitch class profiles
+- **Tonnetz**: Harmonic network features
 
-- Evaluation – Outputs classification report and confusion matrix.
+### 2. Data Preprocessing
+- Audio normalization using librosa
+- Feature standardization with StandardScaler
+- Class balancing with SMOTE
 
-- Saving Model – The model, scaler, and label encoder are saved as .pkl files for inference in the web app.
+### 3. Model Training
+- **Algorithm**: ExtraTreesClassifier
+- **Dataset**: Audio_Speech_Actors and Audio_Song_Actors
+- **Augmentation**: Background noise for happy/sad emotions
+- **Evaluation**: Classification report + confusion matrix
 
-## 📦 Dependencies
-nginx
-Copy
-Edit
+## Usage
+
+### Web App
+1. Upload a `.wav` file
+2. View detected emotion and confidence scores
+3. See probability distribution across all emotions
+
+### Programmatic Usage
+```python
+import joblib
+from audio_detection import extract_features
+
+# Load models
+model = joblib.load("model.pkl")
+scaler = joblib.load("scaler.pkl")
+encoder = joblib.load("encoder.pkl")
+
+# Predict emotion
+features = extract_features("your_audio.wav")
+features_scaled = scaler.transform([features])
+prediction = model.predict(features_scaled)
+emotion = encoder.inverse_transform(prediction)[0]
+```
+
+## Dependencies
+```
 streamlit
 librosa
-scikit-learn
-matplotlib
 numpy
-pandas
+scikit-learn
 joblib
-imblearn
+```
 
-## 🎯 Emotion Labels Supported
-neutral
-calm
-happy
-sad
-angry
-fearful
-disgust
-surprised
+## Supported Emotions
+| Code | Emotion   | Emoji |
+|------|-----------|-------|
+| 01   | neutral   | 😐    |
+| 02   | calm      | 😌    |
+| 03   | happy     | 😊    |
+| 04   | sad       | 😢    |
+| 05   | angry     | 😠    |
+| 06   | fearful   | 😨    |
+| 07   | disgust   | 🤢    |
+| 08   | surprised | 😲    |
 
-## 🙋‍♂️ Author
-Rajveer Singh
+## Technical Details
+- **Audio format**: WAV files only
+- **Feature vector**: 65 dimensions
+- **Model accuracy**: See `audio_classification.ipynb` for detailed metrics
+- **Processing time**: ~1-2 seconds per file
+
+## Author
+**Rajveer Singh**  
 Student @ IIT Roorkee
-Project: Audio Emotion Detection with ML & Streamlit
+
+---
+
+For detailed implementation and training process, see `audio_classification.ipynb`.
