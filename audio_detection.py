@@ -1,103 +1,97 @@
+# app.py
+
 import streamlit as st
-import numpy as np
 import librosa
+import numpy as np
 import joblib
 import os
 
-# --- Feature Extraction (from the final model in mars.py) ---
-# This function must be identical to the one used for training.
-def extract_features(file_path):
-    """Extracts MFCC features from an audio file."""
+# --- Page Configuration ---
+st.set_page_config(
+    page_title="MARS: Emotion Recognition",
+    page_icon="🎵",
+    layout="centered"
+)
+
+# --- Feature Extraction Function ---
+# This function must be identical to the one used for training
+def extract_features(file, n_mfcc=50):
+    """Extracts MFCCs from an audio file."""
     try:
-        # Load audio file. sr=None preserves the original sampling rate.
-        # res_type='kaiser_fast' is used for faster processing.
-        y, sr = librosa.load(file_path, sr=None, res_type='kaiser_fast')
-        
-        # Extract 50 MFCCs, as specified in the final model training.
-        mfcc = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=50)
-        
-        # Return the mean of the MFCCs across time.
+        # For Streamlit's UploadedFile object, 'file' is the object itself
+        y, sr = librosa.load(file, sr=None, res_type='kaiser_fast')
+        mfcc = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=n_mfcc)
         return np.mean(mfcc.T, axis=0)
     except Exception as e:
-        st.error(f"Error loading or processing audio file: {e}")
+        st.error(f"Error processing audio file: {e}")
         return None
 
-# --- Load Pretrained Model, Scaler, and Encoder ---
-# Use st.cache_resource to load these assets only once, improving performance.
+# --- Asset Loading ---
+# Use st.cache_resource to load model and objects only once
 @st.cache_resource
 def load_assets():
     """Loads the pre-trained model, scaler, and label encoder."""
-    try:
-        model = joblib.load("emotion_model_7class.pkl")
-        scaler = joblib.load("scaler_7class.pkl")
-        encoder = joblib.load("label_encoder_7class.pkl")
-        return model, scaler, encoder
-    except FileNotFoundError:
-        st.error(
-            "Model files not found. Please ensure 'emotion_model_7class.pkl', "
-            "'scaler_7class.pkl', and 'label_encoder_7class.pkl' are in the same directory as the app."
-        )
-        return None, None, None
+    model_path = "emotion_model_7class.pkl"
+    scaler_path = "scaler_7class.pkl"
+    le_path = "label_encoder_7class.pkl"
 
-# --- Streamlit UI ---
-st.set_page_config(page_title="MARS Emotion Detector", layout="centered")
-st.title("🎧 MARS: Mood & Audio Recognition System")
+    if not all(os.path.exists(p) for p in [model_path, scaler_path, le_path]):
+        st.error("Model assets not found! Please run the `train_model.py` script first to generate them.")
+        st.stop()
+    
+    model = joblib.load(model_path)
+    scaler = joblib.load(scaler_path)
+    le = joblib.load(le_path)
+    return model, scaler, le
 
-# Load model assets
-model, scaler, encoder = load_assets()
+model, scaler, le = load_assets()
 
-# Only proceed if the assets were loaded successfully
-if model and scaler and encoder:
-    # Dynamically generate the list of supported emotions from the encoder
-    class_names = [name.capitalize() for name in encoder.classes_]
-    class_list = ", ".join(f"`{name}`" for name in class_names)
+# --- UI Layout ---
+st.title("MARS: Music & Speech Emotion Recognition 🎵")
 
-    st.markdown(f"""
-    Upload a `.wav` audio file and our system will analyze the emotion conveyed.
-    This model recognizes **7 emotions**: {class_list}.
-    """)
+st.markdown("""
+This application predicts emotion from audio files. It was trained on the RAVDESS dataset to recognize 7 emotions: 
+**calm, happy, sad, angry, fearful, neutral, and surprised.**
+""")
 
-    # File uploader widget
-    uploaded_file = st.file_uploader("Choose an audio file (.wav only)", type=["wav"])
+st.info("Upload a `.wav` file and click 'Classify Emotion' to see the prediction.", icon="💡")
 
-    if uploaded_file is not None:
-        # Display the audio player for the uploaded file
-        st.audio(uploaded_file, format='audio/wav')
+# File uploader
+uploaded_file = st.file_uploader("Choose a WAV file", type="wav")
 
-        # To use librosa, we need a file path. So we save the uploaded file temporarily.
-        temp_file_path = "temp_audio.wav"
-        with open(temp_file_path, "wb") as f:
-            f.write(uploaded_file.getbuffer())
-        
-        # Display a status message while processing
-        with st.spinner("Analyzing audio..."):
-            try:
-                # 1. Extract features from the temporary audio file
-                features = extract_features(temp_file_path)
+if uploaded_file is not None:
+    # Display audio player
+    st.audio(uploaded_file, format='audio/wav')
 
-                if features is not None:
-                    # 2. Scale the features using the loaded scaler
-                    # Reshape features to a 2D array for the scaler
-                    features_scaled = scaler.transform([features])
+    # Classify button
+    if st.button("Classify Emotion", type="primary"):
+        with st.spinner('Analyzing the audio...'):
+            # 1. Extract features
+            features = extract_features(uploaded_file, n_mfcc=50)
 
-                    # 3. Predict emotion and probabilities
-                    prediction_index = model.predict(features_scaled)
-                    predicted_emotion = encoder.inverse_transform(prediction_index)[0]
-                    probabilities = model.predict_proba(features_scaled)[0]
+            if features is not None:
+                # 2. Reshape and scale features
+                features_reshaped = features.reshape(1, -1)
+                features_scaled = scaler.transform(features_reshaped)
 
-                    # 4. Display the results
-                    st.success("Analysis Complete!")
-                    st.markdown(f"### 🎭 Detected Emotion: **{predicted_emotion.capitalize()}**")
+                # 3. Predict emotion
+                prediction_encoded = model.predict(features_scaled)
+                prediction_proba = model.predict_proba(features_scaled)
 
-                    # Create a dictionary of emotions and their probabilities for the bar chart
-                    prob_dict = {emotion: prob for emotion, prob in zip(encoder.classes_, probabilities)}
-                    st.bar_chart(prob_dict)
+                # 4. Decode prediction to a human-readable label
+                emotion = le.inverse_transform(prediction_encoded)[0]
 
-            except Exception as e:
-                st.error(f"An error occurred during analysis: {e}")
-            finally:
-                # Clean up the temporary file
-                if os.path.exists(temp_file_path):
-                    os.remove(temp_file_path)
-else:
-    st.warning("Application is not ready. Model assets could not be loaded.")
+                # --- Display Results ---
+                st.success(f"### Predicted Emotion: **{emotion.capitalize()}**")
+
+                st.write("#### Prediction Probabilities:")
+                # Create a dictionary of emotions and their probabilities
+                probabilities = dict(zip(le.classes_, prediction_proba[0]))
+                
+                # Display probabilities in a neat way
+                for emotion_class, prob in sorted(probabilities.items(), key=lambda item: item[1], reverse=True):
+                    col1, col2 = st.columns([3, 7])
+                    with col1:
+                        st.write(f"**{emotion_class.capitalize()}**")
+                    with col2:
+                        st.progress(prob, text=f"{prob:.1%}")
