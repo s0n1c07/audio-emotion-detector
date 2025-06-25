@@ -19,7 +19,7 @@ Machine learning pipeline for classifying emotions in speech audio with a Stream
 
 ### Installation
 ```bash
-git clone <repository-url>
+git clone https://github.com/s0n1c07/audio-emotion-detector/
 cd audio-emotion-classification
 pip install -r requirements.txt
 ```
@@ -32,7 +32,7 @@ streamlit run audio_detection.py
 ## Project Structure
 ```
 ├── audio_detection.py          # Streamlit web app
-├── audio_classification.ipynb  # Model training notebook
+├── MARS.ipynb                  # Model training notebook
 ├── model.pkl                   # Trained ExtraTreesClassifier
 ├── scaler.pkl                  # Feature scaler
 ├── encoder.pkl                 # Label encoder
@@ -54,7 +54,7 @@ streamlit run audio_detection.py
 - Class balancing with SMOTE
 
 ### 3. Model Training
-- **Algorithm**: ExtraTreesClassifier
+- **Algorithm**: LGBClassifier
 - **Dataset**: Audio_Speech_Actors and Audio_Song_Actors
 - **Augmentation**: Background noise for happy/sad emotions
 - **Evaluation**: Classification report + confusion matrix
@@ -107,7 +107,7 @@ joblib
 ## Technical Details
 - **Audio format**: WAV files only
 - **Feature vector**: 65 dimensions
-- **Model accuracy**: See `audio_classification.ipynb` for detailed metrics
+- **Model accuracy**: See `MARS.ipynb` for detailed metrics
 - **Processing time**: ~1-2 seconds per file
 
 ## Author
