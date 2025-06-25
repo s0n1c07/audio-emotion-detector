@@ -31,9 +31,9 @@ def extract_features(file, n_mfcc=50):
 # --- Asset Loader ---
 @st.cache_resource
 def load_assets():
-    model_path = "emotion_model_7class.pkl"
-    scaler_path = "scaler_7class.pkl"
-    le_path = "label_encoder_7class.pkl"
+    model_path = "emotion.pkl"
+    scaler_path = "scaler.pkl"
+    le_path = "label.pkl"
 
     if not all(os.path.exists(p) for p in [model_path, scaler_path, le_path]):
         st.error("🚫 Required model files not found. Please upload the .pkl files.")
