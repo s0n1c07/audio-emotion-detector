@@ -1,6 +1,7 @@
 streamlit
-librosa
 numpy
+librosa
+soundfile
 scikit-learn
-joblib
 lightgbm
+joblib
