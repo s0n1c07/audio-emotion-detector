@@ -6,44 +6,28 @@ import os
 
 # Important: These libraries are required to unpickle the saved files.
 # Make sure you have lightgbm and scikit-learn installed.
-from sklearn.preprocessing import RobustScaler, LabelEncoder
+# --- CORRECTED IMPORT: Using StandardScaler instead of RobustScaler ---
+from sklearn.preprocessing import StandardScaler, LabelEncoder
 from lightgbm import LGBMClassifier
 
 # --- Emotion Labels for the 7-class model ---
-# These are the classes the new model was trained on (disgust is excluded).
-# The LabelEncoder will have its classes_ attribute in alphabetical order.
 class_labels = ["angry", "calm", "fearful", "happy", "neutral", "sad", "surprised"]
 emotion_emojis = {
     "neutral": "😐", "calm": "😌", "happy": "😊", "sad": "😢",
     "angry": "😠", "fearful": "😨", "surprised": "😲"
 }
-# Create a formatted string for the UI description.
 emotions_to_display = ", ".join([f"{emotion_emojis[e]} {e.capitalize()}" for e in class_labels])
 
 
-# --- Feature Extraction (Identical to the original app) ---
+# --- Feature Extraction (40-feature MFCC mean) ---
 def extract_features_from_signal(y, sr):
-    """Extracts a feature vector from an audio signal."""
+    """Extracts a 40-feature vector (MFCC mean) from an audio signal."""
     mfcc = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=40)
-    mfcc_mean, mfcc_std = np.mean(mfcc, axis=1), np.std(mfcc, axis=1)
-
-    delta1 = librosa.feature.delta(mfcc)
-    delta2 = librosa.feature.delta(mfcc, order=2)
-
-    spec_con = librosa.feature.spectral_contrast(y=y, sr=sr)
-    chroma = librosa.feature.chroma_stft(y=y, sr=sr)
-    tonnetz = librosa.feature.tonnetz(y=librosa.effects.harmonic(y), sr=sr) # Using harmonic component for tonnetz
-
-    return np.hstack([
-        mfcc_mean, mfcc_std,
-        np.mean(delta1, axis=1), np.mean(delta2, axis=1),
-        np.mean(spec_con, axis=1),
-        np.mean(tonnetz, axis=1)
-    ])
+    mfcc_mean = np.mean(mfcc, axis=1)
+    return mfcc_mean
 
 def extract_features(file_path):
     """Loads an audio file and extracts features."""
-    # res_type='kaiser_fast' is good for speed. sr=None preserves the original sampling rate.
     y, sr = librosa.load(file_path, sr=None, res_type='kaiser_fast')
     return extract_features_from_signal(y, sr)
 
@@ -86,15 +70,14 @@ if uploaded_file is not None:
             # Extract features from the audio file
             features = extract_features(temp_file_path)
 
-            # Scale the features using the loaded RobustScaler
-            # The input to the scaler must be 2D, so we wrap `features` in a list
+            # Scale the features using the loaded StandardScaler
             features_scaled = scaler.transform([features])
 
             # Make a prediction and get probabilities
             prediction = model.predict(features_scaled)
             proba = model.predict_proba(features_scaled)[0]
 
-            # Decode the predicted label from a number to the emotion name
+            # Decode the predicted label
             predicted_emotion = encoder.inverse_transform(prediction)[0]
             predicted_emoji = emotion_emojis.get(predicted_emotion, "❓")
 
@@ -103,7 +86,6 @@ if uploaded_file is not None:
         st.markdown(f"### 🎭 Emotion Detected: **{predicted_emoji} {predicted_emotion.capitalize()}**")
 
         # Create a dictionary of emotions and their probabilities for the chart
-        # We use encoder.classes_ to ensure the order is correct
         proba_dict = dict(zip(encoder.classes_, proba))
         st.bar_chart(proba_dict)
 
