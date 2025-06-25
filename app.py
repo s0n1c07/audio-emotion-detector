@@ -28,9 +28,9 @@ model_loaded = False
 
 # GitHub URLs for your models (replace with your actual GitHub URLs)
 MODEL_URLS = {
-    'model': 'https://raw.githubusercontent.com/yourusername/yourrepo/main/emotion_model_7class.pkl',
-    'scaler': 'https://raw.githubusercontent.com/yourusername/yourrepo/main/scaler_7class.pkl',
-    'encoder': 'https://raw.githubusercontent.com/yourusername/yourrepo/main/label_encoder_7class.pkl'
+    'model': 'https://github.com/s0n1c07/audio-emotion-detector/main/emotion.pkl',
+    'scaler': 'https://github.com/s0n1c07/audio-emotion-detector/main/scaler.pkl',
+    'encoder': 'https://github.com/s0n1c07/audio-emotion-detector/main/label.pkl'
 }
 
 def allowed_file(filename):
