@@ -1,6 +1,7 @@
-streamlit
-librosa
-numpy
-scikit-learn
-joblib
-lightgbm
+streamlit==1.35.0
+librosa==0.10.1
+scikit-learn==1.5.0
+numpy==1.26.4
+joblib==1.4.2
+soundfile==0.12.1
+lightgbm==4.3.0
