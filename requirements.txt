@@ -3,3 +3,4 @@ librosa
 numpy
 scikit-learn
 joblib
+lightgbm
