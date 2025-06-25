@@ -6,7 +6,8 @@ import os
 
 # Important: These libraries are required to unpickle the saved files.
 # Make sure you have lightgbm and scikit-learn installed.
-from sklearn.preprocessing import RobustScaler, LabelEncoder
+# --- CORRECTED IMPORT: Using StandardScaler instead of RobustScaler ---
+from sklearn.preprocessing import StandardScaler, LabelEncoder
 from lightgbm import LGBMClassifier
 
 # --- Emotion Labels for the 7-class model ---
@@ -18,23 +19,15 @@ emotion_emojis = {
 emotions_to_display = ", ".join([f"{emotion_emojis[e]} {e.capitalize()}" for e in class_labels])
 
 
-# --- Feature Extraction (CORRECTED to match the 40-feature model) ---
-
+# --- Feature Extraction (40-feature MFCC mean) ---
 def extract_features_from_signal(y, sr):
-    """
-    Extracts a 40-feature vector (MFCC mean) from an audio signal.
-    This MUST match the feature engineering used to train the model.
-    """
-    # Calculate 40 MFCCs
+    """Extracts a 40-feature vector (MFCC mean) from an audio signal."""
     mfcc = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=40)
-    # Calculate the mean of the MFCCs over time
     mfcc_mean = np.mean(mfcc, axis=1)
-    # Return the 40-element feature vector
     return mfcc_mean
 
 def extract_features(file_path):
     """Loads an audio file and extracts features."""
-    # res_type='kaiser_fast' is good for speed. sr=None preserves the original sampling rate.
     y, sr = librosa.load(file_path, sr=None, res_type='kaiser_fast')
     return extract_features_from_signal(y, sr)
 
@@ -74,18 +67,17 @@ if uploaded_file is not None:
             # Load the trained assets
             model, scaler, encoder = load_assets()
 
-            # Extract features from the audio file (now returns 40 features)
+            # Extract features from the audio file
             features = extract_features(temp_file_path)
 
-            # Scale the 40 features using the loaded RobustScaler
-            # The input to the scaler must be 2D, so we wrap `features` in a list
+            # Scale the features using the loaded StandardScaler
             features_scaled = scaler.transform([features])
 
             # Make a prediction and get probabilities
             prediction = model.predict(features_scaled)
             proba = model.predict_proba(features_scaled)[0]
 
-            # Decode the predicted label from a number to the emotion name
+            # Decode the predicted label
             predicted_emotion = encoder.inverse_transform(prediction)[0]
             predicted_emoji = emotion_emojis.get(predicted_emotion, "❓")
 
