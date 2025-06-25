@@ -1,9 +1,7 @@
-# requirements.txt (for the Streamlit app)
-
-streamlit==1.28.2
-numpy==1.26.1
-scikit-learn==1.3.2
-lightgbm==4.1.0
-joblib==1.3.2
+streamlit==1.35.0
 librosa==0.10.1
+scikit-learn==1.5.0
+numpy==1.26.4
+joblib==1.4.2
 soundfile==0.12.1
+lightgbm==4.3.0
