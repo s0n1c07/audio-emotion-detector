@@ -1,3 +1,5 @@
+import sys
+st.info(f"Python version: {sys.version}")
 import streamlit as st
 import librosa
 import numpy as np
